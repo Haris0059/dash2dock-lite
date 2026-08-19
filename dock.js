@@ -170,6 +170,7 @@ export let Dock = GObject.registerClass(
       this._trashIcon = null;
       this._recentFilesIcon = null;
       this._downloadsIcon = null;
+      this._trackDashInput();
       this._beginAnimation();
     }
 
@@ -426,37 +427,69 @@ export let Dock = GObject.registerClass(
 
       this._updateIconEffect();
 
+      // struts reserves work area. it must stay out of the input region:
+      // with autohide off it spans the full monitor width, so it would
+      // swallow every click in that band
       Main.layoutManager.addChrome(this.struts, {
         affectsStruts: !this.extension.autohide_dash,
-        ...(Config.PACKAGE_VERSION[0] == '4'
-          ? { affectsInputRegion: true }
-          : {}),
+        affectsInputRegion: false,
         trackFullscreen: false,
       });
 
+      // the container is sized to the whole monitor and keeps that size when
+      // the dock slides out, so it cannot carry the input region either.
+      // track the visible parts instead - see _trackDashInput below
       Main.layoutManager.addChrome(this, {
         affectsStruts: false,
-        // keep the full-width container out of the input region. its
-        // allocation spans the whole monitor and stays put when the dock
-        // slides out, so on X11 it blocks clicks near the screen edge.
-        // struts carries input for the visible dock and is hidden along
-        // with it.
         affectsInputRegion: false,
         trackFullscreen: true,
       });
 
+      // 4px edge strip - stays in the input region so autohide reveal works
       Main.layoutManager.addChrome(this.dwell, {
         affectsStruts: false,
-        // affectsInputRegion: false,
         trackFullscreen: false,
       });
 
       this._onChrome = true;
+
+      if (this._background) {
+        Main.layoutManager.trackChrome(this._background, {
+          affectsInputRegion: true,
+        });
+      }
+      this._trackDashInput();
+    }
+
+    // recreateDash() destroys and rebuilds this.dash, so its input tracking
+    // has to be re-established whenever that happens - otherwise the dock
+    // silently stops being clickable after any settings change
+    _trackDashInput() {
+      if (!this._onChrome) {
+        return;
+      }
+      if (this._trackedDash && this._trackedDash != this.dash) {
+        Main.layoutManager.untrackChrome(this._trackedDash);
+        this._trackedDash = null;
+      }
+      if (this.dash && this._trackedDash != this.dash) {
+        Main.layoutManager.trackChrome(this.dash, {
+          affectsInputRegion: true,
+        });
+        this._trackedDash = this.dash;
+      }
     }
 
     removeFromChrome() {
       if (!this._onChrome) {
         return;
+      }
+      if (this._trackedDash) {
+        Main.layoutManager.untrackChrome(this._trackedDash);
+        this._trackedDash = null;
+      }
+      if (this._background) {
+        Main.layoutManager.untrackChrome(this._background);
       }
       Main.layoutManager.removeChrome(this.struts);
       Main.layoutManager.removeChrome(this);
