@@ -190,10 +190,10 @@ export let Animator = class {
       if (!icon._icon) return;
       let pos = icon.get_transformed_position();
 
-      if (icon._found && !icon._handled) {
-        icon._handled = true;
-        dock._maybeBounce(icon, true);
-      }
+      // discovering an actor is not a launch. GNOME rebuilds dash items when
+      // any app starts or stops, and bouncing here with force=true skipped
+      // the window-count guard - unrelated icons jumped. intentional bounces
+      // still come from Dock and DockItemMenu
 
       icon._pos = [...pos];
       icon._fixedPosition = [...pos];
