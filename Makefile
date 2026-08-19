@@ -1,6 +1,9 @@
 all: build install lint
 
-.PHONY: build install
+.PHONY: build install reload
+
+reload:
+	./tools/reload.sh
 
 build:
 	glib-compile-schemas --strict --targetdir=schemas/ schemas
