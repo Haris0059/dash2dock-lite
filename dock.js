@@ -427,12 +427,17 @@ export let Dock = GObject.registerClass(
 
       this._updateIconEffect();
 
+      // GNOME 50 dropped affectsInputRegion, and Params.parse throws on
+      // unknown keys - passing it there would fail to initialize the dock
+      // entirely. on 4x it must be passed, since it defaults to true
+      const hasAffectsInputRegion = Config.PACKAGE_VERSION[0] == '4';
+
       // struts reserves work area. it must stay out of the input region:
       // with autohide off it spans the full monitor width, so it would
       // swallow every click in that band
       Main.layoutManager.addChrome(this.struts, {
         affectsStruts: !this.extension.autohide_dash,
-        affectsInputRegion: false,
+        ...(hasAffectsInputRegion ? { affectsInputRegion: false } : {}),
         trackFullscreen: false,
       });
 
@@ -441,7 +446,7 @@ export let Dock = GObject.registerClass(
       // track the visible parts instead - see _trackDashInput below
       Main.layoutManager.addChrome(this, {
         affectsStruts: false,
-        affectsInputRegion: false,
+        ...(hasAffectsInputRegion ? { affectsInputRegion: false } : {}),
         trackFullscreen: true,
       });
 
@@ -454,9 +459,10 @@ export let Dock = GObject.registerClass(
       this._onChrome = true;
 
       if (this._background) {
-        Main.layoutManager.trackChrome(this._background, {
-          affectsInputRegion: true,
-        });
+        Main.layoutManager.trackChrome(
+          this._background,
+          hasAffectsInputRegion ? { affectsInputRegion: true } : {}
+        );
       }
       this._trackDashInput();
     }
@@ -473,9 +479,10 @@ export let Dock = GObject.registerClass(
         this._trackedDash = null;
       }
       if (this.dash && this._trackedDash != this.dash) {
-        Main.layoutManager.trackChrome(this.dash, {
-          affectsInputRegion: true,
-        });
+        Main.layoutManager.trackChrome(
+          this.dash,
+          Config.PACKAGE_VERSION[0] == '4' ? { affectsInputRegion: true } : {}
+        );
         this._trackedDash = this.dash;
       }
     }
