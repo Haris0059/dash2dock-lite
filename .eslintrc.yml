@@ -1,3 +1,53 @@
 extends:
  - ./lint/eslintrc-gjs.yml
  - ./lint/eslintrc-shell.yml
+parserOptions:
+  ecmaVersion: 2022
+  sourceType: module
+globals:
+  console: readonly
+  TextDecoder: readonly
+  TextEncoder: readonly
+rules:
+  # Formatting is prettier's job (.prettierrc). The vendored GNOME configs
+  # specify 4-space indent and other conventions this codebase does not follow.
+  indent: off
+  comma-dangle: off
+  arrow-parens: off
+  quotes: off
+  curly: off
+  object-curly-spacing: off
+  no-extra-parens: off
+  operator-linebreak: off
+  padded-blocks: off
+  spaced-comment: off
+  nonblock-statement-body-position: off
+  lines-between-class-members: off
+  keyword-spacing: off
+  no-trailing-spaces: off
+  # Conventions the codebase deliberately departs from.
+  camelcase: off
+  valid-jsdoc: off
+  func-style: off
+  eqeqeq: off
+  no-invalid-this: off
+  prefer-promise-reject-errors: off
+  object-shorthand: off
+  no-lonely-if: off
+  operator-assignment: off
+  prefer-template: off
+  prefer-arrow-callback: off
+  no-nested-ternary: off
+  no-implicit-coercion: off
+  no-useless-return: off
+  no-extra-bind: off
+  require-await: off
+  # `x && x.foo()` is used pervasively as a guarded call.
+  no-unused-expressions: off
+  # Genuine-but-noisy; surface without failing the build.
+  no-unused-vars:
+    - warn
+    - args: after-used
+      argsIgnorePattern: '^(unused|_)'
+      varsIgnorePattern: '(^unused|_$)'
+  no-shadow: warn

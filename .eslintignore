@@ -1,0 +1,8 @@
+build/
+node_modules/
+# Standalone gjs scratch scripts using the legacy imports.* API, not the
+# extension's ESM. eslint 6 also hard-crashes on top-level await here.
+tests/
+# Transpile templates for the legacy GNOME 42-44 build; not ESM.
+tools/
+_*.js
