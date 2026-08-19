@@ -436,7 +436,12 @@ export let Dock = GObject.registerClass(
 
       Main.layoutManager.addChrome(this, {
         affectsStruts: false,
-        // affectsInputRegion: false,
+        // keep the full-width container out of the input region. its
+        // allocation spans the whole monitor and stays put when the dock
+        // slides out, so on X11 it blocks clicks near the screen edge.
+        // struts carries input for the visible dock and is hidden along
+        // with it.
+        affectsInputRegion: false,
         trackFullscreen: true,
       });
 
@@ -1152,7 +1157,7 @@ export let Dock = GObject.registerClass(
 
       // dwell
       //! add scaleFactor?
-      let dwellHeight = 2;
+      let dwellHeight = 4;
       if (vertical) {
         this.dwell.width = dwellHeight;
         this.dwell.height = this.height;
