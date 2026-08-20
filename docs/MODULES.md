@@ -218,11 +218,17 @@ upstream touched recently stays and is documented here instead.
 | `tools/transpile.py`, `tools/imports_{extension,prefs}.js` | serve the dead `g44` target | upstream edited them 2025-12 |
 | `tests/*.js` | standalone gjs scratch scripts on the legacy `imports.*` API | dev-useful; excluded from eslint and stripped by `make install` |
 | `apps/{trash,downloads,mount}-dash2dock-lite.desktop` | shadowed — generated into `/tmp` at runtime instead | upstream still ships them |
-| `screenshots/`, `.github/images/` | referenced only from README via GitHub URLs | documentation assets |
+| `.github/images/` | 260 KB thumbnail, referenced by nothing in the tree | upstream-owned; harmless |
+| `lint/*.yml` | looks like disabled formatting config | **not dead** — supplies `eslint:recommended` and the GJS globals (`log`, `imports`, `ARGV`) that `no-undef` needs |
+| `package.json` | no scripts, no deps, `main` points at a nonexistent file | upstream metadata; nothing reads it |
 
-**Removed** in the restructure (dead *and* untouched upstream since 2024):
-`ui/legacy/*.ui`, `tests/generate_legacy.py`, `tests/legacy_row_template.ui`,
-`apps/app-grid-dash2dock-lite.desktop`, `ERRORS.md` (0 bytes).
+**Removed:** `ui/legacy/*.ui`, `tests/generate_legacy.py`,
+`tests/legacy_row_template.ui`, `apps/app-grid-dash2dock-lite.desktop`, `ERRORS.md`
+(0 bytes), and `screenshots/` (9.5 MB, ~70% of clone weight; README links the same
+images from upstream's repo by URL, and `make install` stripped it anyway).
+
+Also removed: every donation prompt and the funding config — see
+[FORK.md](FORK.md) for the exact surface and why attribution was kept.
 
 ### Not dead, despite appearances
 

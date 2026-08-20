@@ -96,9 +96,27 @@ PRs were rejected — that reasoning is expensive to re-derive.
 
 | commit | what |
 |---|---|
-| *tip* | `src/` source layout, docs under `docs/`, `tools/check-imports.sh` |
+| — | `src/` source layout, docs under `docs/`, `tools/check-imports.sh` |
+| — | donation prompts and funding config removed |
+| — | `screenshots/` and dead legacy UI artifacts removed |
 
-These never drop out on rebase. See the tip-commit rule above.
+These never drop out on rebase. See the invariant above.
+
+**The donation removal is the fork's most conflict-prone patch.** It touches
+`metadata.json` (62 upstream commits, last 2026-05-23), `prefs.js` (84, 2025-12-19),
+`ui/general.ui` (41, 2025-12-03) and `README.md` (46, 2026-01-30) — all files upstream
+edits routinely. Expect to re-resolve it most rebases; `rerere` will replay the
+resolution once you have done it once.
+
+What was removed: the `donations` block in `metadata.json`, `.github/FUNDING.yml`, the
+`open-buy-coffee` action and QR loader in `prefs.js`, the "Buy me a coffee" menu item
+in `ui/menu.ui`, the thank-you/QR banner group in `ui/general.ui`, the
+`ui/images/qr_icedman.png` asset, and the badge in `README.md`.
+
+**Attribution was deliberately kept** and must stay — GPL-3.0 requires it and the tree
+is overwhelmingly icedman's work: `LICENSE`, `original-authors` and `url` in
+`metadata.json`, the project-page/bug-report/license links in the prefs menu, and the
+README credits. Removing funding links is not the same as removing authorship.
 
 ### Deliberate departures from the upstream diffs
 
@@ -121,7 +139,7 @@ layouts without an offset).
 
 ## If upstream goes quiet for a full release cycle
 
-Revisit whether to publish this as a separate extension. That means a new UUID, a new
-schema id, dropping the upstream `donations` block, and preserving attribution for
-icedman and for every contributor whose PR is carried above — the tree is
-overwhelmingly their work, and GPL-3.0 requires those notices be kept.
+Revisit whether to publish this as a separate extension. That means a new UUID and a
+new schema id, and preserving attribution for icedman and for every contributor whose
+PR is carried above — the tree is overwhelmingly their work, and GPL-3.0 requires those
+notices be kept. The `donations` block is already gone (see the fork-local table).
