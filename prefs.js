@@ -81,10 +81,6 @@ export default class Preferences extends ExtensionPreferences {
         link: 'https://github.com/icedman/dash2dock-lite',
       },
       {
-        name: 'open-buy-coffee',
-        link: 'https://www.buymeacoffee.com/icedman',
-      },
-      {
         name: 'open-license',
         link: 'https://github.com/icedman/dash2dock-lite/blob/master/LICENSE',
       },
@@ -178,13 +174,6 @@ export default class Preferences extends ExtensionPreferences {
     window.set_search_enabled(true);
 
     // this.dump(window, 0);
-
-    // add buymeacoffee QR
-    if (builder.get_object('qr')) {
-      builder
-        .get_object('qr')
-        .set_from_file(`${UIFolderPath}/images/qr_icedman.png`);
-    }
 
     let settings = this.getSettings(schemaId);
     settings.set_string('msg-to-ext', '');
