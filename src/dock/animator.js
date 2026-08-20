@@ -7,9 +7,9 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 const Point = Graphene.Point;
 
-import { Dot } from './apps/dot.js';
+import { Dot } from '../icons/dot.js';
 import { DockPosition } from './dock.js';
-import { Vector } from './vector.js';
+import { Vector } from '../render/vector.js';
 
 import { DockItemDotsOverlay, DockItemBadgeOverlay } from './dockItems.js';
 import {
@@ -17,13 +17,13 @@ import {
   Linear,
   CubicEaseOut,
   QuadraticEaseOut,
-} from './effects/easing.js';
+} from '../render/effects/easing.js';
 import {
   get_distance_sqr,
   get_distance,
   isInRect,
   isOverlapRect,
-} from './utils.js';
+} from '../util/utils.js';
 
 const ANIM_POSITION_PER_SEC = 550 / 1000;
 const ANIM_SIZE_PER_SEC = 250 / 1000;

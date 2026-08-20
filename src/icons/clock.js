@@ -5,7 +5,7 @@ import Clutter from 'gi://Clutter';
 import Cairo from 'gi://cairo';
 import St from 'gi://St';
 
-import { Drawing } from '../drawing.js';
+import { Drawing } from '../render/drawing.js';
 
 function _drawFrame(ctx, size, settings) {
   if (!settings.frame) {

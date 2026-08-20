@@ -11,6 +11,8 @@ import Clutter from 'gi://Clutter';
 const getMonochromeShaderSource = (extensionDir) => {
   const SHADER_PATH = GLib.build_filenamev([
     extensionDir,
+    'src',
+    'render',
     'effects',
     'monochrome_effect.glsl',
   ]);

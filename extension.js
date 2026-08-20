@@ -29,22 +29,22 @@ import Graphene from 'gi://Graphene';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import { tempPath, trySpawnCommandLine } from './utils.js';
-import { loadFile } from './utils.js';
+import { tempPath, trySpawnCommandLine } from './src/util/utils.js';
+import { loadFile } from './src/util/utils.js';
 
-import { Timer } from './timer.js';
-import { Style } from './style.js';
-import { Dock } from './dock.js';
-import { Services } from './services.js';
-import { Integrations } from './integrations.js';
-import { runTests } from './diagnostics.js';
+import { Timer } from './src/util/timer.js';
+import { Style } from './src/render/style.js';
+import { Dock } from './src/dock/dock.js';
+import { Services } from './src/services/services.js';
+import { Integrations } from './src/services/integrations.js';
+import { runTests } from './src/util/diagnostics.js';
 
 import {
   Extension,
   gettext as _,
 } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import { schemaId, SettingsKeys } from './preferences/keys.js';
+import { schemaId, SettingsKeys } from './src/prefs/keys.js';
 
 const SERVICES_UPDATE_INTERVAL = 2500;
 

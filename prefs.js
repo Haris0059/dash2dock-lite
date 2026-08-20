@@ -9,14 +9,14 @@ import Adw from 'gi://Adw';
 
 const GETTEXT_DOMAIN = 'dash2dock-light';
 
-import { schemaId, SettingsKeys } from './preferences/keys.js';
-import { MonitorsConfig } from './monitors.js';
+import { schemaId, SettingsKeys } from './src/prefs/keys.js';
+import { MonitorsConfig } from './src/services/monitors.js';
 
 import {
   ExtensionPreferences,
   gettext as _,
 } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import { tempPath } from './utils.js';
+import { tempPath } from './src/util/utils.js';
 
 export default class Preferences extends ExtensionPreferences {
   constructor(metadata) {

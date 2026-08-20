@@ -3,7 +3,7 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as BoxPointer from 'resource:///org/gnome/shell/ui/boxpointer.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import { trySpawnCommandLine } from './utils.js';
+import { trySpawnCommandLine } from '../util/utils.js';
 // import { trySpawnCommandLine } from 'resource:///org/gnome/shell/misc/util.js';
 
 import Gio from 'gi://Gio';
@@ -14,7 +14,7 @@ import Graphene from 'gi://Graphene';
 const Point = Graphene.Point;
 
 import { DockPosition } from './dock.js';
-import { Vector } from './vector.js';
+import { Vector } from '../render/vector.js';
 
 const ANIM_POSITION_PER_SEC = 450 / 1000;
 

@@ -5,7 +5,7 @@ import GObject from 'gi://GObject';
 import Clutter from 'gi://Clutter';
 import Cairo from 'gi://cairo';
 
-import { Drawing } from '../drawing.js';
+import { Drawing } from '../render/drawing.js';
 
 export const DebugOverlay = GObject.registerClass(
   {},

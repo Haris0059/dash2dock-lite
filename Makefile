@@ -27,16 +27,16 @@ publish:
 	rm -rf build
 	mkdir ./build
 	cp LICENSE ./build
-	cp *.js ./build
+	cp extension.js prefs.js ./build
 	cp metadata.json ./build
 	cp stylesheet.css ./build
 	cp CHANGELOG.md ./build
 	cp README.md ./build
 	cp -R schemas ./build
+	cp -R src ./build
 	cp -R ui ./build
 	cp -R apps ./build
-	cp -R preferences ./build
-	cp -R effects ./build
+	cp -R themes ./build
 	rm -rf ./*.zip
 	rm -rf build/schemas/gschemas.compiled
 	rm -rf build/*_.js

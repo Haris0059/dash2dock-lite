@@ -1,15 +1,15 @@
 'use strict';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { tempPath, trySpawnCommandLine } from './utils.js';
+import { tempPath, trySpawnCommandLine } from '../util/utils.js';
 // import { trySpawnCommandLine } from 'resource:///org/gnome/shell/misc/util.js';
 
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Graphene from 'gi://Graphene';
 
-import { Clock } from './apps/clock.js';
-import { Calendar } from './apps/calendar.js';
+import { Clock } from '../icons/clock.js';
+import { Calendar } from '../icons/calendar.js';
 
 // sync with animator
 const CANVAS_SIZE = 120;

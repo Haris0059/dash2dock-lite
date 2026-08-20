@@ -13,8 +13,8 @@ import St from 'gi://St';
 
 import { Dash } from 'resource:///org/gnome/shell/ui/dash.js';
 
-import { TintEffect } from './effects/tint_effect.js';
-import { MonochromeEffect } from './effects/monochrome_effect.js';
+import { TintEffect } from '../render/effects/tint_effect.js';
+import { MonochromeEffect } from '../render/effects/monochrome_effect.js';
 
 import { DockIcon, DockItemContainer, DockBackground } from './dockItems.js';
 import { DockItemList } from './dockItemMenu.js';
@@ -26,7 +26,7 @@ import {
   isInRect,
   isOverlapRect,
   tempPath,
-} from './utils.js';
+} from '../util/utils.js';
 
 const Point = Graphene.Point;
 

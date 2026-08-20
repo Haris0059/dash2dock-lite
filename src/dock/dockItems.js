@@ -3,7 +3,7 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as BoxPointer from 'resource:///org/gnome/shell/ui/boxpointer.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import { trySpawnCommandLine } from './utils.js';
+import { trySpawnCommandLine } from '../util/utils.js';
 
 // import { trySpawnCommandLine } from 'resource:///org/gnome/shell/misc/util.js';
 

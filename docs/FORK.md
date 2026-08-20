@@ -22,6 +22,33 @@ Nobody consumes this branch downstream, so rebasing (and force-pushing `main`) i
 safe, and it buys the thing that makes a carried fork maintainable: `git rebase`
 matches patch-ids and **silently drops patches upstream has already taken**.
 
+### The restructure commit must stay at the tip
+
+`Reorganize extension sources under src/` is a fork-local commit that will never go
+upstream. The invariant is that **every commit touching upstream's source files sits
+below it**, still addressing root-level paths — which is exactly what keeps patch-id
+matching and `rerere` working:
+
+- carried patches touch `dock.js`, `animator.js`, … , so their patch-ids still match
+  the equivalent commit upstream and still get dropped automatically
+- `rerere` resolutions are keyed on path + hunk, so the recurring `dock.js` conflicts
+  replay as before
+- the restructure itself replays as a pure rename set; git's rename detection carries
+  upstream's edits into `src/` for you
+
+Commits that only *add* fork-local files (docs, tooling, skills) may sit above it —
+they touch nothing upstream owns and so cannot conflict.
+
+**Adding a new fix:** author it against the *root* paths and insert it **below** the
+restructure commit, so it stays upstream-portable:
+
+```sh
+git rebase -i <restructure-commit>^   # mark the restructure commit 'edit', or reorder
+```
+
+A fix committed on top of the restructure is written against `src/` paths and can no
+longer be submitted upstream unmodified, nor patch-id matched when upstream takes it.
+
 ## Routine
 
 ```sh
@@ -64,6 +91,14 @@ PRs were rejected — that reasoning is expensive to re-derive.
 | `c10e816` | #356 | track visible dock actors for input region |
 | `21fd474` | *local* | guard `addChrome` options for GNOME 50 |
 | `c40c21b` | #359 + #360 | mount icon identity and unmount cleanup |
+
+### Fork-local commits with no upstream counterpart
+
+| commit | what |
+|---|---|
+| *tip* | `src/` source layout, docs under `docs/`, `tools/check-imports.sh` |
+
+These never drop out on rebase. See the tip-commit rule above.
 
 ### Deliberate departures from the upstream diffs
 

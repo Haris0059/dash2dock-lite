@@ -8,7 +8,7 @@ import {
   get_distance,
   isInRect,
   isOverlapRect,
-} from './utils.js';
+} from '../util/utils.js';
 
 const DEBOUNCE_HIDE_TIMEOUT = 120;
 const PRESSURE_SENSE_DISTANCE = 40;

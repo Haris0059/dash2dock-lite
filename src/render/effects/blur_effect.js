@@ -8,6 +8,8 @@ import Clutter from 'gi://Clutter';
 const getBlurShaderSource = (extensionDir) => {
   const SHADER_PATH = GLib.build_filenamev([
     extensionDir,
+    'src',
+    'render',
     'effects',
     'blur_effect.glsl',
   ]);
