@@ -588,8 +588,7 @@ export default class Dash2DockLiteExt extends Extension {
           this.animate();
           break;
         }
-        case 'shrink-icons':
-        case 'icon-size': {
+        case 'shrink-icons': {
           this._updateShrink();
           this.animate();
           break;
