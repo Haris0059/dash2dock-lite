@@ -1,6 +1,6 @@
 all: build install lint
 
-.PHONY: build install reload
+.PHONY: all build install reload clean publish install-zip lint xml-lint pretty todo test-prefs test-shell test-shell2
 
 reload:
 	./tools/reload.sh
@@ -108,6 +108,7 @@ test-shell-g44: g44
 
 lint:
 	eslint ./
+	./tools/check-imports.sh
 
 xml-lint:
 	cd ui ; \
