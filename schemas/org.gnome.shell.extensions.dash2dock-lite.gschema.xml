@@ -316,6 +316,16 @@
         <summary>Favorits apps only</summary>
         <description>Show only icons of favorite apps.</description>
     </key>
+    <key type="b" name="running-only">
+        <default>false</default>
+        <summary>Running apps only</summary>
+        <description>Show only icons of apps with open windows.</description>
+    </key>
+    <key type="as" name="toggle-running-only">
+        <default>['&lt;Control&gt;l']</default>
+        <summary>Toggle running apps only</summary>
+        <description>Keyboard shortcut to toggle the running apps only filter.</description>
+    </key>
     <key type="b" name="apps-icon">
         <default>true</default>
         <summary>Apps icon</summary>

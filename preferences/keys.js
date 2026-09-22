@@ -160,6 +160,10 @@ export const SettingsKeys = () => {
       default_value: false,
       widget_type: 'switch',
     },
+    'running-only': {
+      default_value: false,
+      widget_type: 'switch',
+    },
     'apps-icon': {
       default_value: true,
       widget_type: 'switch',

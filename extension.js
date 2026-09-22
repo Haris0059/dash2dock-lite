@@ -24,6 +24,7 @@ import * as Fav from 'resource:///org/gnome/shell/ui/appFavorites.js';
 
 import St from 'gi://St';
 import Shell from 'gi://Shell';
+import Meta from 'gi://Meta';
 import Graphene from 'gi://Graphene';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
@@ -532,7 +533,8 @@ export default class Dash2DockLiteExt extends Extension {
         case 'apps-icon-front':
         case 'calendar-icon':
         case 'clock-icon':
-        case 'favorites-only': {
+        case 'favorites-only':
+        case 'running-only': {
           this.animate({ refresh: true });
           break;
         }
@@ -674,6 +676,16 @@ export default class Dash2DockLiteExt extends Extension {
   }
 
   _addEvents() {
+    Main.wm.addKeybinding(
+      'toggle-running-only',
+      this._settings,
+      Meta.KeyBindingFlags.NONE,
+      Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
+      () => {
+        this._settings.set_boolean('running-only', !this.running_only);
+      }
+    );
+
     this._appSystem = Shell.AppSystem.get_default();
 
     this._appSystem.connectObject(
@@ -798,6 +810,7 @@ export default class Dash2DockLiteExt extends Extension {
   }
 
   _removeEvents() {
+    Main.wm.removeKeybinding('toggle-running-only');
     this._appSystem.disconnectObject(this);
     this._appSystem = null;
     this._appFavorites.disconnectObject(this);

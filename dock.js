@@ -603,8 +603,23 @@ export let Dock = GObject.registerClass(
       if (c._cls === 'dash-separator') {
         this._separators.push(c);
         this._dashItems.push(c);
-        c.visible = true;
+        let hide = () =>
+          this.extension.favorites_only || this.extension.running_only;
+        c.visible = !hide();
         c.style = 'margin-left: 8px; margin-right: 8px;';
+        // GNOME's native Dash owns and re-shows this separator on its own
+        // redisplay/paint cycle, independent of and more frequent than our
+        // event-driven hide above - it wins that race and the separator
+        // drifts back to visible within a couple of seconds. A property
+        // watcher corrects it the instant anyone (GNOME included) sets it
+        // visible again, rather than trying to out-poll GNOME's own cycle.
+        if (!c._d2dlVisWatch) {
+          c._d2dlVisWatch = c.connect('notify::visible', () => {
+            if (hide() && c.visible) {
+              c.visible = false;
+            }
+          });
+        }
         return false;
       }
 
@@ -651,19 +666,26 @@ export let Dock = GObject.registerClass(
             let app = c._appwell.app;
             let appId = app ? app.get_id() : '';
 
-            // hide icons if favorites only
-            if (
-              !c.custom_icon &&
-              this._favorite_ids &&
-              !this._favorite_ids.includes(appId)
-            ) {
-              if (this.extension.favorites_only) {
+            // hide icons filtered out by favorites-only / running-only
+            if (!c.custom_icon && app) {
+              let notFavorite =
+                this._favorite_ids && !this._favorite_ids.includes(appId);
+              if (
+                (this.extension.favorites_only && notFavorite) ||
+                (this.extension.running_only &&
+                  this.getAppWindowsFiltered(app).length == 0)
+              ) {
+                // DashItemContainer computes its own preferred size and
+                // ignores an explicit width/height request, so the only
+                // thing that actually collapses its box-layout slot is
+                // hiding the container itself. That's normally unrecoverable
+                // (_inspectIcon bails at the top for an invisible actor),
+                // but the box-iteration loop below resets visible = true
+                // on every actor before calling _inspectIcon, so it is
+                // always re-considered on the next pass.
                 c._appwell.visible = false;
-                c.width = -1;
-                c.height = -1;
+                c.visible = false;
                 return false;
-              } else if (!c._found) {
-                c._found = true;
               }
             }
           }
@@ -749,6 +771,12 @@ export let Dock = GObject.registerClass(
       // find favorites and running apps icons
       //--------------------
       this.dash._box.get_children().forEach((icon) => {
+        // reset before inspecting: a previous pass may have hidden this
+        // actor outright to collapse its box-layout slot (see the
+        // favorites-only / running-only branch below), and _inspectIcon
+        // bails out immediately for an invisible actor, so without this
+        // reset it could never be re-shown once hidden.
+        icon.visible = true;
         this._inspectIcon(icon);
       });
 
@@ -762,23 +790,12 @@ export let Dock = GObject.registerClass(
         }
       }
 
-      // hide separator between running apps and favorites - if not needed
-      if (this.extension.favorites_only) {
-        if (this._separators.length) {
-          this._separators[0].visible = false;
-          this._separators = [];
-        }
-      } else {
-        if (this._separators.length) {
-          this._separators[0].visible = true;
-        }
-      }
-
       //--------------------
       // find custom icons (trash, mounts, downloads, etc...)
       //--------------------
       if (this._extraIcons) {
         this._extraIcons.get_children().forEach((icon) => {
+          icon.visible = true;
           this._inspectIcon(icon);
         });
         this._extraIcons.visible = this._extraIcons.get_children().length > 1;
