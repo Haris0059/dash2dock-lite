@@ -595,11 +595,30 @@ export let Animator = class {
         icon._renderer._icon = icon._icon;
         icon._renderer.set_style_class_name('');
 
+        // the container's scale_x is eased by the favorites-only /
+        // running-only filter (dock.js _inspectIcon) and is what collapses
+        // its layout slot; the renderer is redrawn from scratch every
+        // frame, so mirror that scale here as a multiplier instead of
+        // tweening the renderer separately, which would get clobbered by
+        // the per-frame assignments below within one tick
+        let filterScale = icon.scale_x;
+        if (filterScale < 1) didScale = true; // keep the hi-res loop alive
+
         if (!icon._appwell?._bounce) {
           icon._renderer.translationY = 0;
         }
 
         let renderer = icon._renderer;
+        // captured before the size-snap below updates _filterOwner, so it
+        // also gates the opacity zero-out further down: on the exact frame
+        // a renderer slot gets reassigned (icon._idx shifted because a
+        // filtered icon ahead of it just left the visible list),
+        // icon.get_transformed_position() can still read last frame's
+        // allocation - Clutter hasn't relaid-out this container's new
+        // neighbours out yet - so the renderer would flash at the wrong
+        // spot for exactly one frame. Skip painting it that one frame
+        // instead of chasing Clutter's internal allocation timing.
+        let rendererJustReassigned = renderer._filterOwner !== icon;
         if (gicon) {
           // apply override
           renderer.gicon = gicon;
@@ -640,6 +659,19 @@ export let Animator = class {
         let unscaledIconSize = dock._iconSizeScaledDown * scaleFactor;
         let targetSize = unscaledIconSize * icon._targetScale;
         let currentSize = renderer.icon_size * renderer.scaleX;
+        // the renderer pool is reused by array index (icon._idx above);
+        // when an icon ahead of this one leaves the visible list (e.g. a
+        // filtered icon finishing its collapse), every icon after it
+        // shifts down one index and inherits a renderer that still holds
+        // a *different* icon's leftover size - interpolating toward the
+        // real target from that stale value visibly pops. Snap instead of
+        // easing on the first frame under new ownership; this also fixes
+        // the matching position jump below, since adjustX/adjustY are
+        // derived from this same targetSize.
+        if (rendererJustReassigned) {
+          renderer._filterOwner = icon;
+          currentSize = targetSize;
+        }
         {
           let dst = targetSize - currentSize;
           let mag = Math.abs(dst);
@@ -665,7 +697,10 @@ export let Animator = class {
           renderer.set_icon_size(baseSize);
         }
         let scaleToTarget = targetSize / baseSize;
-        renderer.set_scale(scaleToTarget, scaleToTarget);
+        renderer.set_scale(
+          scaleToTarget * filterScale,
+          scaleToTarget * filterScale
+        );
 
         let p = icon.get_transformed_position();
         let adjustX = icon.width / 2 - targetSize / 2;
@@ -790,8 +825,10 @@ export let Animator = class {
         }
 
         //! todo... add placeholder opacity when dragging
-        renderer.opacity =
-          icon._icon == dock._dragged && dock._dragging ? 75 : 255;
+        renderer.opacity = rendererJustReassigned
+          ? 0
+          : (icon._icon == dock._dragged && dock._dragging ? 75 : 255) *
+            filterScale;
       }
 
       //! make more readable

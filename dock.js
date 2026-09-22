@@ -46,6 +46,9 @@ export const DockAlignment = {
 const PREVIEW_FRAMES = 64;
 const ANIM_DEBOUNCE_END_DELAY = 750;
 
+const FILTER_HIDE_TIME = 300;
+const FILTER_SHOW_TIME = 400;
+
 const MIN_SCROLL_RESOLUTION = 4;
 const MAX_SCROLL_RESOLUTION = 10;
 
@@ -605,7 +608,13 @@ export let Dock = GObject.registerClass(
         this._dashItems.push(c);
         let hide = () =>
           this.extension.favorites_only || this.extension.running_only;
-        c.visible = !hide();
+        // hold off while any icon still has a filter ease in flight
+        // (this._filterAnimCount below), so this doesn't flip mid-transition
+        // and jump everything after it - it settles in the same forced
+        // _findIcons() pass as the icons' own onComplete instead
+        if (!this._filterAnimCount) {
+          c.visible = !hide();
+        }
         c.style = 'margin-left: 8px; margin-right: 8px;';
         // GNOME's native Dash owns and re-shows this separator on its own
         // redisplay/paint cycle, independent of and more frequent than our
@@ -670,22 +679,110 @@ export let Dock = GObject.registerClass(
             if (!c.custom_icon && app) {
               let notFavorite =
                 this._favorite_ids && !this._favorite_ids.includes(appId);
-              if (
+              let shouldHide =
                 (this.extension.favorites_only && notFavorite) ||
                 (this.extension.running_only &&
-                  this.getAppWindowsFiltered(app).length == 0)
-              ) {
-                // DashItemContainer computes its own preferred size and
-                // ignores an explicit width/height request, so the only
-                // thing that actually collapses its box-layout slot is
-                // hiding the container itself. That's normally unrecoverable
-                // (_inspectIcon bails at the top for an invisible actor),
-                // but the box-iteration loop below resets visible = true
-                // on every actor before calling _inspectIcon, so it is
-                // always re-considered on the next pass.
-                c._appwell.visible = false;
-                c.visible = false;
-                return false;
+                  this.getAppWindowsFiltered(app).length == 0);
+
+              // Two separate things need to animate together here:
+              // - scale_x/scale_y drives the *rendered icon image*, mirrored
+              //   onto the renderer as a multiplier in animator.js (the
+              //   renderer is a separate always-on-top actor, redrawn from
+              //   scratch every frame - it has no layout footprint of its
+              //   own).
+              // - width/height drives the *actual box-layout slot*. scale_x
+              //   does NOT affect DashItemContainer's preferred size here
+              //   (confirmed empirically: get_preferred_width() returns a
+              //   fixed value regardless of scale_x), so without easing
+              //   width/height too, the rendered icon fades smoothly while
+              //   the dock itself stays full width the whole time, then
+              //   snaps to its final size in one frame at the end -
+              //   visually broken even though the icon animation looks
+              //   fine. An active Clutter transition on width/height wins
+              //   over layout()'s unconditional per-frame icon.width
+              //   assignment below, so the two don't fight.
+              if (shouldHide) {
+                if (c._filterHidden && !c._filterAnim) {
+                  // already collapsed and settled: skip straight to the
+                  // cheap path, same as before - no wasted work
+                  // re-animating something already gone. Unhiding stays
+                  // recoverable because the box-iteration loop resets
+                  // visible = true on every actor before calling
+                  // _inspectIcon, so it's always re-considered.
+                  c._appwell.visible = false;
+                  c.visible = false;
+                  return false;
+                }
+                if (!c._filterAnim) {
+                  c._filterAnim = true;
+                  this._filterAnimCount = (this._filterAnimCount || 0) + 1;
+                  c.remove_transition('scale-x');
+                  c.remove_transition('scale-y');
+                  c.remove_transition('width');
+                  c.remove_transition('height');
+                  c.ease({
+                    scale_x: 0,
+                    scale_y: 0,
+                    width: 0,
+                    height: 0,
+                    duration: FILTER_HIDE_TIME,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                      c._filterAnim = false;
+                      c._filterHidden = true;
+                      this._filterAnimCount = Math.max(
+                        0,
+                        (this._filterAnimCount || 0) - 1
+                      );
+                      if (c._appwell) c._appwell.visible = false;
+                      c.visible = false;
+                      // several icons hidden together each complete their
+                      // own ease independently, a frame or two apart even
+                      // though they were started together - nulling _icons
+                      // (and so re-indexing every remaining renderer, see
+                      // animator.js) on every single one of those completions
+                      // caused a visible last-instant jitter on surviving
+                      // icons (confirmed live: renderer position dipping
+                      // and snapping back). Only rebuild once, after the
+                      // last icon in the batch actually finishes.
+                      if (!this._filterAnimCount) {
+                        this._icons = null;
+                        this._beginAnimation();
+                      }
+                    },
+                  });
+                  this._beginAnimation();
+                }
+                // fall through while animating: keep this icon in
+                // this._icons/renderers for the whole collapse instead of
+                // losing its renderer the instant the filter flips
+              } else if (c._filterHidden || c._filterAnim || c.scale_x < 1) {
+                c._filterHidden = false;
+                if (!c._filterAnim) {
+                  c._filterAnim = true;
+                  this._filterAnimCount = (this._filterAnimCount || 0) + 1;
+                  let targetSize = this._iconTargetSize || 62;
+                  c.remove_transition('scale-x');
+                  c.remove_transition('scale-y');
+                  c.remove_transition('width');
+                  c.remove_transition('height');
+                  c.ease({
+                    scale_x: 1,
+                    scale_y: 1,
+                    width: targetSize,
+                    height: targetSize,
+                    duration: FILTER_SHOW_TIME,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                      c._filterAnim = false;
+                      this._filterAnimCount = Math.max(
+                        0,
+                        (this._filterAnimCount || 0) - 1
+                      );
+                    },
+                  });
+                  this._beginAnimation();
+                }
               }
             }
           }
@@ -1180,9 +1277,21 @@ export let Dock = GObject.registerClass(
         this._edge_distance = 0;
       }
 
+      // read by _inspectIcon's filter show-ease as its width/height target;
+      // one frame stale at worst, corrected the frame after by the loop
+      // below once the ease completes and releases the property
+      this._iconTargetSize = Math.floor(iconSizeSpaced * scaleFactor);
+
       this._icons.forEach((icon) => {
-        icon.width = Math.floor(iconSizeSpaced * scaleFactor);
-        icon.height = Math.floor(iconSizeSpaced * scaleFactor);
+        // a filter hide/show ease owns width/height while it's running
+        // (see _inspectIcon) - forcing them back to full size here every
+        // frame would fight that transition and produce a visible
+        // sawtooth (confirmed live: dash.width snapping back mid-collapse,
+        // dragging the centered dash off-center until the fight ends)
+        if (!icon._filterAnim) {
+          icon.width = Math.floor(iconSizeSpaced * scaleFactor);
+          icon.height = Math.floor(iconSizeSpaced * scaleFactor);
+        }
         if (icon.style != iconStyle) {
           icon.style = iconStyle;
         }
